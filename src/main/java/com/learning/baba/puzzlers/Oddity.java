@@ -1,6 +1,6 @@
 package com.learning.baba.puzzlers;
 
-import com.learning.baba.java.concepts.ReadFile;
+import com.learning.baba.java.ReadFile;
 
 import java.util.Scanner;
 

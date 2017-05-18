@@ -1,4 +1,4 @@
-package com.learning.baba.java.concepts;
+package com.learning.baba.java;
 
 import java.io.IOException;
 import java.nio.file.Files;
