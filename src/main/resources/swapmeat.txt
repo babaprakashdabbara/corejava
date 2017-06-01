@@ -1,0 +1,53 @@
+As its name implies, this program is supposed to swap the values of the variables x and y. It you ran
+it, you found that it fails miserably, printing x = 0; y = 1984.
+The obvious way to swap two variables is to use a temporary variable:
+int tmp = x;
+x = y;
+y = tmp;
+Long ago, when central processing units had few registers, it was discovered that one could avoid
+the use of a temporary variable by taking advantage of the property of the exclusive OR operator (^)
+that (x ^ y ^ x) == y:
+// Swaps variables without a temporary - Don't do this!
+x = x ^ y;
+y = y ^ x;
+x = y ^ x;
+Even back in those days, this technique was seldom justified. Now that CPUs have many registers,
+it is never justified. Like most "clever" code, it is far less clear than its naive counterpart and far
+slower. Still, some programmers persist in using it. Worse, they complicate matters by using the
+idiom illustrated in this puzzle, which combines the three exclusive OR operations into a single
+statement.
+This idiom was used in the C programming language and from there made its way into C++ but is
+not guaranteed to work in either of these languages. It is guaranteed not to work in Java. The Java
+language specification says that operands of operators are evaluated fromleft to right [JLS
+15.7]. To evaluate the expression x ^= expr, the value of x is sampled before expr is evaluated, and
+the exclusive OR of these two values is assigned to the variable x [JLS 15.26.2]. In the CleverSwap
+program, the variable x is sampled twice— once for each appearance in the expression— but both
+samplings occur before any assignments.
+The following code snippet describes the behavior of the broken swap idiom in more detail and
+explains the output that we observed:
+// The actual behavior of x ^= y ^= x ^= y in Java
+int tmp1 = x; // First appearance of x in the expression
+int tmp2 = y; // First appearance of y
+int tmp3 = x ^ y; // Compute x ^ y
+x = tmp3; // Last assignment: Store x ^ y in x
+y = tmp2 ^ tmp3; // 2nd assignment: Store original x value in y
+x = tmp1 ^ y; // First assignment: Store 0 in x
+In C and C++, the order of expression evaluation is not specified. When compiling the expression x
+^= expr, many C and C++ compilers sample the value of x after evaluating expr, which makes the
+idiom work. Although it may work, it runs afoul of the C/C++ rule that you must not modify a
+variable repeatedly between successive sequence points [ISO-C]. Therefore, the behavior of this
+idiom is undefined even in C and C++.
+For what it's worth, it is possible to write a Java expression that swaps the contents of two variables
+without using a temporary. It is both ugly and useless:
+// Rube Goldberg would approve, but don't ever do this!
+y = (x ^= (y ^= x)) ^ y;
+The lesson is simple: Do not assign to the same variable more than once in a single expression.
+Expressions containing multiple assignments to the same variable are confusing and seldom do
+what you want. Even expressions that assign to multiple variables are suspect. More generally,
+avoid clever programming tricks. They are bug-prone, difficult to maintain, and often run more
+slowly than the straightforward code they replace [EJ Item 37].
+Language designers might consider prohibitingmultiple assignments to the same variable in one
+expression, but it would not be feasible to enforce this prohibition in the general case, because of
+aliasing. For example, consider the expression x = a[i]++ - a[j]++. Does it increment the same
+variable twice? That depends on the values of i and j at the time the expression is evaluated, and
+there is no way for the compiler to determine this in general.
